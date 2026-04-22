@@ -148,7 +148,7 @@ def async_setup_platform_entities(
     def is_enabled(slug_attr: str) -> bool:
         return slug_attr in entry.options.get(CONF_RESOURCES, [slug_attr])
 
-    seen_attrs: set[str] = set()
+    seen_keys: set[tuple[str, str]] = set()
 
     def _add_new_entities() -> None:
         if coordinator.data is None:
@@ -157,11 +157,12 @@ def async_setup_platform_entities(
         for instrument in coordinator.data:
             if instrument.component != component:
                 continue
-            if instrument.attr in seen_attrs:
+            key = (instrument.component, instrument.attr)
+            if key in seen_keys:
                 continue
             if not is_enabled(instrument.slug_attr):
                 continue
-            seen_attrs.add(instrument.attr)
+            seen_keys.add(key)
             data.instruments.add(instrument)
             kwargs = dict(
                 data=data,
