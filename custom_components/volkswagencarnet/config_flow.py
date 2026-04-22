@@ -50,9 +50,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): str,
         vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
         vol.Optional(CONF_CONVERT, default=CONF_NO_CONVERSION): vol.In(CONVERT_DICT),
-        vol.Optional(
-            CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-        ): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
     }
 )
 
@@ -107,9 +105,7 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors["base"] = "cannot_connect"
             return
 
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-        )
+        self.hass.async_create_task(self.hass.config_entries.flow.async_configure(flow_id=self.flow_id))
 
     async def async_step_login(self, user_input: dict | None = None) -> FlowResult:
         """Handle login step."""
@@ -136,15 +132,12 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("Found vehicle with VIN: %s", vehicle.vin)
 
         self._init_info["CONF_VEHICLES"] = {
-            vehicle.vin: vehicle.dashboard().instruments
-            for vehicle in self._connection.vehicles
+            vehicle.vin: vehicle.dashboard().instruments for vehicle in self._connection.vehicles
         }
 
         return self.async_show_progress_done(next_step_id="select_vehicle")
 
-    async def async_step_select_vehicle(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
+    async def async_step_select_vehicle(self, user_input: dict | None = None) -> FlowResult:
         """Handle select vehicle step."""
         if user_input is not None:
             self._init_info[CONF_VEHICLE] = user_input[CONF_VEHICLE]
@@ -162,14 +155,10 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_VEHICLE): vol.In(vin_numbers)}),
         )
 
-    async def async_step_select_instruments(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
+    async def async_step_select_instruments(self, user_input: dict | None = None) -> FlowResult:
         """Handle select instruments step."""
         instruments = self._init_info["CONF_VEHICLES"][self._init_info[CONF_VEHICLE]]
-        instruments_dict = {
-            instrument.attr: instrument.name for instrument in instruments
-        }
+        instruments_dict = {instrument.attr: instrument.name for instrument in instruments}
 
         if user_input is not None:
             self._init_info.pop("CONF_VEHICLES", None)
@@ -193,11 +182,7 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select_instruments",
             errors=self._errors,
             data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_RESOURCES, default=list(instruments_dict.keys())
-                    ): cv.multi_select(instruments_dict)
-                }
+                {vol.Optional(CONF_RESOURCES, default=list(instruments_dict.keys())): cv.multi_select(instruments_dict)}
             ),
             last_step=True,
         )
@@ -208,9 +193,7 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._entry = self.hass.config_entries.async_get_entry(entry_id)
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
+    async def async_step_reauth_confirm(self, user_input: dict | None = None) -> FlowResult:
         """Handle re-authentication with Volkswagen Connect."""
         errors: dict[str, str] = {}
 
@@ -221,9 +204,7 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
-                country=self._entry.options.get(
-                    CONF_REGION, self._entry.data[CONF_REGION]
-                ),
+                country=self._entry.options.get(CONF_REGION, self._entry.data[CONF_REGION]),
             )
 
             try:
@@ -257,9 +238,7 @@ class VolkswagenCarnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=self._entry.data[CONF_USERNAME]
-                    ): str,
+                    vol.Required(CONF_USERNAME, default=self._entry.data[CONF_USERNAME]): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -303,9 +282,7 @@ class VolkswagenCarnetOptionsFlowHandler(config_entries.OptionsFlow):
                     ): str,
                     vol.Optional(
                         CONF_REGION,
-                        default=self._config_entry.options.get(
-                            CONF_REGION, self._config_entry.data[CONF_REGION]
-                        ),
+                        default=self._config_entry.options.get(CONF_REGION, self._config_entry.data[CONF_REGION]),
                     ): str,
                     vol.Optional(
                         CONF_MUTABLE,
@@ -313,35 +290,40 @@ class VolkswagenCarnetOptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.boolean,
                     vol.Optional(
                         CONF_CONVERT,
-                        default=self._config_entry.data.get(
-                            CONF_CONVERT, CONF_NO_CONVERSION
-                        ),
+                        default=self._config_entry.data.get(CONF_CONVERT, CONF_NO_CONVERSION),
                     ): vol.In(CONVERT_DICT),
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self._config_entry.options.get(
                             CONF_SCAN_INTERVAL,
-                            self._config_entry.data.get(
-                                CONF_SCAN_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                            ),
+                            self._config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_UPDATE_INTERVAL),
                         ),
                     ): cv.positive_int,
                 }
             ),
         )
 
-    async def async_step_select_instruments(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
+    async def async_step_select_instruments(self, user_input: dict | None = None) -> FlowResult:
         """Handle select instruments step."""
         coordinator = await get_coordinator(self.hass, self._config_entry)
         data = self._config_entry.as_dict()
 
         vehicle: Vehicle = get_vehicle(coordinator=coordinator)
         instruments = vehicle.dashboard().instruments
-        instruments_dict = {
-            instrument.attr: instrument.name for instrument in instruments
-        }
+        current_instruments = {instrument.attr: instrument.name for instrument in instruments}
+        previously_available = data.get("options", {}).get(CONF_AVAILABLE_RESOURCES, {})
+
+        if vehicle.is_connection_state_is_online_supported:
+            car_is_online = vehicle.connection_state_is_online
+        elif vehicle.is_connection_state_is_active_supported:
+            car_is_online = vehicle.connection_state_is_active
+        else:
+            car_is_online = False
+
+        if car_is_online:
+            instruments_dict = current_instruments
+        else:
+            instruments_dict = {**previously_available, **current_instruments}
 
         if user_input is not None:
             old_resources = set(data.get("options", {}).get(CONF_RESOURCES, []))
@@ -386,21 +368,13 @@ class VolkswagenCarnetOptionsFlowHandler(config_entries.OptionsFlow):
                 },
             )
 
-        selected = {
-            i
-            for i in instruments_dict
-            if i in data.get("options", {}).get(CONF_RESOURCES, [])
-        }
+        selected = {i for i in instruments_dict if i in data.get("options", {}).get(CONF_RESOURCES, [])}
 
         return self.async_show_form(
             step_id="select_instruments",
             errors=self._errors,
             data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_RESOURCES, default=list(selected)
-                    ): cv.multi_select(instruments_dict)
-                }
+                {vol.Optional(CONF_RESOURCES, default=list(selected)): cv.multi_select(instruments_dict)}
             ),
             last_step=True,
         )
