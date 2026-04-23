@@ -117,7 +117,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for instrument in (instr for instr in instruments if instr.component in COMPONENTS):
         # Add resource if enabled or new
-        if is_enabled(instrument.slug_attr) or (is_new(instrument.slug_attr) and not entry.pref_disable_new_entities):
+        if is_enabled(instrument.slug_attr) or (
+            is_new(instrument.slug_attr) and not entry.pref_disable_new_entities
+        ):
             data.instruments.add(instrument)
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -282,7 +284,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 class VolkswagenData:
     """Hold component state."""
 
-    def __init__(self, config: dict[str, Any], coordinator: "VolkswagenCoordinator | None" = None) -> None:
+    def __init__(
+        self, config: dict[str, Any], coordinator: "VolkswagenCoordinator | None" = None
+    ) -> None:
         """Initialize the component state."""
         self.vehicles: set[Vehicle] = set()
         self.instruments: set[Instrument] = set()
@@ -292,19 +296,25 @@ class VolkswagenData:
 
     def instrument(self, vin: str, component: str, attr: str) -> Instrument:
         """Return corresponding instrument."""
-        instruments = self.coordinator.data if self.coordinator is not None else self.instruments
+        instruments = (
+            self.coordinator.data if self.coordinator is not None else self.instruments
+        )
 
         instrument = next(
             (
                 instr
                 for instr in instruments
-                if instr.vehicle.vin == vin and instr.component == component and instr.attr == attr
+                if instr.vehicle.vin == vin
+                and instr.component == component
+                and instr.attr == attr
             ),
             None,
         )
 
         if instrument is None:
-            raise ValueError(f"Instrument not found; component: {component}, attribute: {attr}, vin: {vin}")
+            raise ValueError(
+                f"Instrument not found; component: {component}, attribute: {attr}, vin: {vin}"
+            )
 
         return instrument
 
@@ -395,7 +405,9 @@ class VolkswagenEntity(CoordinatorEntity, RestoreEntity):
             return
 
         state_changed = str(self.state or STATE_UNKNOWN) != str(prev.state)
-        time_changed = str(prev.attributes.get("last_updated", None)) != str(backend_refresh_time)
+        time_changed = str(prev.attributes.get("last_updated", None)) != str(
+            backend_refresh_time
+        )
 
         # Check if custom attributes changed
         # Exclude system attributes that HA adds automatically
@@ -411,7 +423,9 @@ class VolkswagenEntity(CoordinatorEntity, RestoreEntity):
         }
         current_attrs = self.extra_state_attributes or {}
         prev_attrs = {k: v for k, v in prev.attributes.items() if k not in system_attrs}
-        current_attrs_compare = {k: v for k, v in current_attrs.items() if k not in system_attrs}
+        current_attrs_compare = {
+            k: v for k, v in current_attrs.items() if k not in system_attrs
+        }
         attributes_changed = current_attrs_compare != prev_attrs
 
         if time_changed or state_changed or attributes_changed:
@@ -443,14 +457,31 @@ class VolkswagenEntity(CoordinatorEntity, RestoreEntity):
         self.restored_state = await self.async_get_last_state()
 
         if self.coordinator is not None:
-            self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+            self.async_on_remove(
+                self.coordinator.async_add_listener(self.async_write_ha_state)
+            )
         else:
-            self.async_on_remove(async_dispatcher_connect(self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state))
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
+                )
+            )
 
     @property
     def instrument(
         self,
-    ) -> BinarySensor | Climate | DoorLock | Position | Select | Sensor | Switch | TrunkLock | Number | Instrument:
+    ) -> (
+        BinarySensor
+        | Climate
+        | DoorLock
+        | Position
+        | Select
+        | Sensor
+        | Switch
+        | TrunkLock
+        | Number
+        | Instrument
+    ):
         """Return corresponding instrument."""
         return self.data.instrument(self.vin, self.component, self.attribute)
 
@@ -527,7 +558,11 @@ class VolkswagenEntity(CoordinatorEntity, RestoreEntity):
         try:
             # Check if instrument exists
             _ = self.instrument
-            return super().available and self.coordinator.last_update_success and self.instrument is not None
+            return (
+                super().available
+                and self.coordinator.last_update_success
+                and self.instrument is not None
+            )
         except ValueError:
             # Instrument not found (disabled or not supported)
             return False
@@ -548,7 +583,9 @@ class VolkswagenEntity(CoordinatorEntity, RestoreEntity):
 class VolkswagenCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
+    ) -> None:
         """Initialize the coordinator."""
         self.vin = entry.data[CONF_VEHICLE].upper()
         self.entry = entry
@@ -593,7 +630,9 @@ class VolkswagenCoordinator(DataUpdateCoordinator):
 
         self.vehicle = vehicle
 
-        convert_conf = self.entry.options.get(CONF_CONVERT, self.entry.data.get(CONF_CONVERT, CONF_NO_CONVERSION))
+        convert_conf = self.entry.options.get(
+            CONF_CONVERT, self.entry.data.get(CONF_CONVERT, CONF_NO_CONVERSION)
+        )
 
         dashboard = vehicle.dashboard(
             mutable=self.entry.data.get(CONF_MUTABLE),
