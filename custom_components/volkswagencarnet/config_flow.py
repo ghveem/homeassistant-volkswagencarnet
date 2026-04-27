@@ -339,7 +339,9 @@ class VolkswagenCarnetOptionsFlowHandler(config_entries.OptionsFlow):
 
         vehicle: Vehicle = get_vehicle(coordinator=coordinator)
         instruments = vehicle.dashboard().instruments
-        current_instruments = {instrument.attr: instrument.name for instrument in instruments}
+        current_instruments = {
+            instrument.attr: instrument.name for instrument in instruments
+        }
         previously_available = data.get("options", {}).get(CONF_AVAILABLE_RESOURCES, {})
 
         if vehicle.is_connection_state_is_online_supported:

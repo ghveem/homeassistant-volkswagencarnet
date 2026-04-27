@@ -19,7 +19,13 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     data = hass.data[DOMAIN][entry.entry_id][DATA]
     coordinator = data.coordinator
     async_setup_platform_entities(
-        hass, entry, coordinator, data, "device_tracker", VolkswagenDeviceTracker, async_add_devices
+        hass,
+        entry,
+        coordinator,
+        data,
+        "device_tracker",
+        VolkswagenDeviceTracker,
+        async_add_devices,
     )
     return True
 
